@@ -19,11 +19,12 @@ use axum::{
 };
 use futures::stream::BoxStream;
 use futures::TryStreamExt as _;
+use sea_orm::{ActiveModelTrait, ActiveValue};
 use serde::Serialize;
 use tokio_util::io::ReaderStream;
 use tracing::instrument;
 
-use crate::database::entity::chunk::ChunkModel;
+use crate::database::entity::chunk::{self, ChunkModel, ChunkState};
 use crate::database::AtticDatabase;
 use crate::error::{ErrorKind, ServerResult};
 use crate::narinfo::NarInfo;
@@ -202,9 +203,26 @@ async fn get_nar(
 
     req_state.set_public_cache(cache.is_public);
 
-    if chunks.iter().any(Option::is_none) {
-        // at least one of the chunks is missing :(
-        return Err(ErrorKind::IncompleteNar.into());
+    for chunk in chunks.iter() {
+        match chunk {
+            Some(chunk) => {
+                let storage = state.storage().await?;
+                if !storage.does_file_exist_db(&chunk.remote_file.0).await {
+                    let broken_chunk = chunk::ActiveModel {
+                        state: ActiveValue::set(ChunkState::Deleted),
+                        ..Default::default()
+                    };
+                    let _ = broken_chunk.update(database).await.map_err(|e| {
+                        tracing::error!(%e, "Database error");
+                        e
+                    });
+                    return Err(ErrorKind::IncompleteNar.into());
+                }
+            }
+            None => {
+                return Err(ErrorKind::IncompleteNar.into());
+            }
+        }
     }
 
     database.bump_object_last_accessed(object.id).await?;

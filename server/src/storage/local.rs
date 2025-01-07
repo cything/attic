@@ -214,4 +214,14 @@ impl StorageBackend for LocalBackend {
     async fn make_db_reference(&self, name: String) -> ServerResult<RemoteFile> {
         Ok(RemoteFile::Local(LocalRemoteFile { name }))
     }
+
+    async fn does_file_exist_db(&self, file: &RemoteFile) -> bool {
+        let file = if let RemoteFile::Local(file) = file {
+            file
+        } else {
+            return false;
+        };
+
+        fs::metadata(self.get_path(&file.name)).await.is_ok()
+    }
 }

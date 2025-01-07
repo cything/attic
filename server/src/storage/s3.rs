@@ -372,4 +372,8 @@ impl StorageBackend for S3Backend {
             key: name,
         }))
     }
+
+    async fn does_file_exist_db(&self, _file: &RemoteFile) -> bool {
+        false
+    }
 }
