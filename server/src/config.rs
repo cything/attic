@@ -442,7 +442,7 @@ impl CompressionConfig {
 
         match self.r#type {
             CompressionType::Brotli => CompressionLevel::Precise(5),
-            CompressionType::Zstd => CompressionLevel::Precise(8),
+            CompressionType::Zstd => CompressionLevel::Default,
             CompressionType::Xz => CompressionLevel::Precise(2),
             _ => CompressionLevel::Default,
         }
