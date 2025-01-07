@@ -19,7 +19,7 @@ use axum::{
 };
 use futures::stream::BoxStream;
 use futures::TryStreamExt as _;
-use sea_orm::{ActiveModelTrait, ActiveValue};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use serde::Serialize;
 use tokio_util::io::ReaderStream;
 use tracing::instrument;
@@ -208,10 +208,8 @@ async fn get_nar(
             Some(chunk) => {
                 let storage = state.storage().await?;
                 if !storage.does_file_exist_db(&chunk.remote_file.0).await {
-                    let broken_chunk = chunk::ActiveModel {
-                        state: ActiveValue::set(ChunkState::Deleted),
-                        ..Default::default()
-                    };
+                    let mut broken_chunk: chunk::ActiveModel = chunk.clone().into();
+                    broken_chunk.state = Set(ChunkState::Deleted);
                     let _ = broken_chunk.update(database).await.map_err(|e| {
                         tracing::error!(%e, "Database error");
                         e
