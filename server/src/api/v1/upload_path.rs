@@ -53,7 +53,7 @@ use crate::database::{AtticDatabase, ChunkGuard, NarGuard};
 /// Number of chunks to upload to the storage backend at once.
 ///
 /// TODO: Make this configurable
-const CONCURRENT_CHUNK_UPLOADS: usize = 10;
+const CONCURRENT_CHUNK_UPLOADS: usize = 32;
 
 /// The maximum size of the upload info JSON.
 ///
