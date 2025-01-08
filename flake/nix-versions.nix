@@ -36,8 +36,6 @@ in
       attic.nix-versions = {
         versions = {
           default = pkgs.nix;
-          "2.20" = pkgs.nixVersions.nix_2_20;
-          "2.24" = pkgs.nixVersions.nix_2_24;
         };
 
         manifestFile = let
