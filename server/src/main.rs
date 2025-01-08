@@ -69,6 +69,8 @@ async fn main() -> Result<()> {
     let config =
         config::load_config(opts.config.as_deref(), opts.mode == ServerMode::Monolithic).await?;
 
+    eprintln!("using config: {:?}", config);
+
     match opts.mode {
         ServerMode::Monolithic => {
             attic_server::run_migrations(config.clone()).await?;
