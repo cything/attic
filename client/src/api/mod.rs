@@ -9,6 +9,7 @@ use futures::{
     future,
     stream::{self, StreamExt, TryStream, TryStreamExt},
 };
+use humantime::Duration;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT},
     Body, Client as HttpClient, Response, StatusCode, Url,
@@ -22,6 +23,7 @@ use attic::api::v1::get_missing_paths::{GetMissingPathsRequest, GetMissingPathsR
 use attic::api::v1::upload_path::{
     UploadPathNarInfo, UploadPathResult, ATTIC_NAR_INFO, ATTIC_NAR_INFO_PREAMBLE_SIZE,
 };
+use attic::api::v1::purge::PurgeResult;
 use attic::cache::CacheName;
 use attic::nix_store::StorePathHash;
 
@@ -213,6 +215,15 @@ impl ApiClient {
             let api_error = ApiError::try_from_response(res).await?;
             Err(api_error.into())
         }
+    }
+
+    /// Purges a cache
+    pub async fn purge_cache(
+        &self,
+        older_than: Duration,
+    ) -> Result<Option<PurgeResult>>
+    {
+
     }
 }
 

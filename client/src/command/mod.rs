@@ -4,3 +4,4 @@ pub mod login;
 pub mod push;
 pub mod r#use;
 pub mod watch_store;
+pub mod purge;
