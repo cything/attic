@@ -25,7 +25,6 @@ use attic::api::v1::upload_path::{
 };
 use attic::cache::CacheName;
 use attic::nix_store::StorePathHash;
-use crate::cache::CacheRef;
 
 /// The User-Agent string of Attic.
 const ATTIC_USER_AGENT: &str =
