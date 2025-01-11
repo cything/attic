@@ -1,8 +1,9 @@
 //! Cache configuration endpoint.
 
 use anyhow::anyhow;
+use attic::api::v1::purge::PurgeCacheRequest;
 use axum::extract::{Extension, Json, Path};
-use chrono::Utc;
+use chrono::{TimeDelta, Utc};
 use sea_orm::sea_query::{Expr, OnConflict};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -10,6 +11,7 @@ use tracing::instrument;
 
 use crate::database::entity::cache::{self, Entity as Cache};
 use crate::database::entity::Json as DbJson;
+use crate::database::entity::object::{self, Entity as Object};
 use crate::error::{ErrorKind, ServerError, ServerResult};
 use crate::{RequestState, State};
 use attic::api::v1::cache_config::{
@@ -226,5 +228,45 @@ pub(crate) async fn create_cache(
         Err(ErrorKind::CacheAlreadyExists.into())
     } else {
         Ok(())
+    }
+}
+
+#[instrument(skip_all, fields(cache_name, payload))]
+pub(crate) async fn purge_cache(
+    Extension(state): Extension<State>,
+    Extension(req_state): Extension<RequestState>,
+    Path(cache_name): Path<CacheName>,
+    Json(payload): Json<PurgeCacheRequest>,
+) -> ServerResult<u64> {
+    let database = state.database().await?;
+    let now = Utc::now();
+
+    let older_than_secs = payload.older_than.as_secs();
+    let older_than_subsec_nanos = payload.older_than.subsec_nanos();
+    let cutoff = now.checked_sub_signed(TimeDelta::new(older_than_secs.try_into().unwrap(), older_than_subsec_nanos).unwrap());
+
+    let cache = req_state
+        .auth
+        .auth_cache(database, &cache_name, |cache, permission| {
+            permission.require_destroy_cache()?;
+            Ok(cache)
+        })
+        .await?;
+
+    let deletion = Object::update_many()
+        .col_expr(cache::Column::DeletedAt, Expr::value(Some(Utc::now())))
+        .filter(cache::Column::Id.eq(cache.id))
+        .filter(cache::Column::DeletedAt.is_null())
+        .filter(
+            object::Column::CreatedAt.lt(cutoff)
+        )
+        .exec(database)
+        .await
+        .map_err(ServerError::database_error)?;
+
+    if deletion.rows_affected == 0 {
+        Err(ErrorKind::NoSuchCache.into())
+    } else {
+        Ok(deletion.rows_affected)
     }
 }

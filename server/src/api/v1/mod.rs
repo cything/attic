@@ -34,4 +34,8 @@ pub(crate) fn get_router() -> Router {
             "/_api/v1/cache-config/:cache",
             delete(cache_config::destroy_cache),
         )
+        .route(
+            "/_api/v1/purge-cache/:cache",
+            post(cache_config::purge_cache),
+        )
 }

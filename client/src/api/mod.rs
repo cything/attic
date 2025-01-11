@@ -18,7 +18,7 @@ use serde::Deserialize;
 
 use crate::config::ServerConfig;
 use crate::version::ATTIC_DISTRIBUTOR;
-use attic::api::v1::cache_config::{CacheConfig, CreateCacheRequest};
+use attic::api::v1::{cache_config::{CacheConfig, CreateCacheRequest}, purge::PurgeCacheRequest};
 use attic::api::v1::get_missing_paths::{GetMissingPathsRequest, GetMissingPathsResponse};
 use attic::api::v1::upload_path::{
     UploadPathNarInfo, UploadPathResult, ATTIC_NAR_INFO, ATTIC_NAR_INFO_PREAMBLE_SIZE,
@@ -221,9 +221,25 @@ impl ApiClient {
     pub async fn purge_cache(
         &self,
         older_than: Duration,
-    ) -> Result<Option<PurgeResult>>
-    {
+        cache: &CacheName,
+    ) -> Result<PurgeResult> {
+        let endpoint = self
+            .endpoint
+            .join("_/api/v1/purge-cache")?;
 
+        let payload = PurgeCacheRequest {
+            cache: cache.to_owned(),
+            older_than: *older_than,
+        };
+
+        let res = self.client.post(endpoint).json(&payload).send().await?;
+
+        if res.status().is_success() {
+            res.json().await?
+        } else {
+            let api_error = ApiError::try_from_response(res).await?;
+            Err(api_error.into())
+        }
     }
 }
 
