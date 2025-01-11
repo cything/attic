@@ -25,6 +25,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v15
         continue-on-error: false # Self-hosted runners already have Nix installed
 
+      - uses: cachix/cachix-action@v15
+        with:
+          name: cything
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
       - name: Install Attic
         run: |
           if ! command -v attic &> /dev/null; then
@@ -87,6 +92,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v15
         continue-on-error: true # Self-hosted runners already have Nix installed
 
+      - uses: cachix/cachix-action@v15
+        with:
+          name: cything
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
       - name: Install Attic
         run: |
           if ! command -v attic &> /dev/null; then
@@ -142,6 +152,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v15
         continue-on-error: true # Self-hosted runners already have Nix installed
 
+      - uses: cachix/cachix-action@v15
+        with:
+          name: cything
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
       - name: Install Attic
         run: |
           if ! command -v attic &> /dev/null; then
@@ -186,6 +201,11 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v15
         continue-on-error: true # Self-hosted runners already have Nix installed
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: cything
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Install Attic
         run: |
@@ -235,6 +255,11 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v15
         continue-on-error: true # Self-hosted runners already have Nix installed
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: cything
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Install Attic
         run: |
