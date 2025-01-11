@@ -1,14 +1,14 @@
 use attic::api::v1::purge::{PurgeCacheRequest, PurgeCacheResult};
 use axum::extract::{Extension, Json, Path};
 use chrono::{TimeDelta, Utc};
-use sea_orm::sea_query::Expr;
 use tracing::instrument;
 
-use crate::database::entity::cache;
 use crate::database::entity::object::{self, Entity as Object};
 use crate::error::{ErrorKind, ServerError, ServerResult};
 use crate::{RequestState, State};
 use attic::cache::CacheName;
+
+use sea_orm::entity::prelude::*;
 
 #[instrument(skip_all, fields(cache_name, payload))]
 pub(crate) async fn purge_cache(
@@ -36,7 +36,6 @@ pub(crate) async fn purge_cache(
     if payload.dry_run {
         deletion = Object::delete_many()
             .filter(object::Column::Id.eq(cache.id))
-            .filter(object::Column::DeletedAt.is_null())
             .filter(
                 object::Column::CreatedAt.lt(cutoff)
             )
@@ -46,7 +45,6 @@ pub(crate) async fn purge_cache(
     } else {
         deletion = Object::delete_many()
             .filter(object::Column::Id.eq(cache.id))
-            .filter(object::Column::DeletedAt.is_null())
             .filter(
                 object::Column::CreatedAt.lt(cutoff)
             )
