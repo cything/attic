@@ -20,7 +20,7 @@ pub struct PurgeCacheRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PurgeResult {
+pub struct PurgeCacheResult {
     /// Number of objects deleted
     pub objects_deleted: u64,
 }

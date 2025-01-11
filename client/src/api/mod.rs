@@ -18,14 +18,14 @@ use serde::Deserialize;
 
 use crate::config::ServerConfig;
 use crate::version::ATTIC_DISTRIBUTOR;
-use attic::api::v1::{cache_config::{CacheConfig, CreateCacheRequest}, purge::PurgeCacheRequest};
+use attic::api::v1::{cache_config::{CacheConfig, CreateCacheRequest}, purge::{PurgeCacheResult, PurgeCacheRequest}};
 use attic::api::v1::get_missing_paths::{GetMissingPathsRequest, GetMissingPathsResponse};
 use attic::api::v1::upload_path::{
     UploadPathNarInfo, UploadPathResult, ATTIC_NAR_INFO, ATTIC_NAR_INFO_PREAMBLE_SIZE,
 };
-use attic::api::v1::purge::PurgeResult;
 use attic::cache::CacheName;
 use attic::nix_store::StorePathHash;
+use crate::cache::CacheRef;
 
 /// The User-Agent string of Attic.
 const ATTIC_USER_AGENT: &str =
@@ -220,9 +220,9 @@ impl ApiClient {
     /// Purges a cache
     pub async fn purge_cache(
         &self,
-        older_than: Duration,
         cache: &CacheName,
-    ) -> Result<PurgeResult> {
+        older_than: Duration,
+    ) -> Result<PurgeCacheResult> {
         let endpoint = self
             .endpoint
             .join("_/api/v1/purge-cache")?;
@@ -235,7 +235,8 @@ impl ApiClient {
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
         if res.status().is_success() {
-            res.json().await?
+            let purge_result = res.json().await?;
+            Ok(purge_result)
         } else {
             let api_error = ApiError::try_from_response(res).await?;
             Err(api_error.into())

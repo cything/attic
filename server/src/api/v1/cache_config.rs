@@ -1,7 +1,7 @@
 //! Cache configuration endpoint.
 
 use anyhow::anyhow;
-use attic::api::v1::purge::PurgeCacheRequest;
+use attic::api::v1::purge::{PurgeCacheRequest, PurgeCacheResult};
 use axum::extract::{Extension, Json, Path};
 use chrono::{TimeDelta, Utc};
 use sea_orm::sea_query::{Expr, OnConflict};
@@ -237,7 +237,7 @@ pub(crate) async fn purge_cache(
     Extension(req_state): Extension<RequestState>,
     Path(cache_name): Path<CacheName>,
     Json(payload): Json<PurgeCacheRequest>,
-) -> ServerResult<u64> {
+) -> ServerResult<Json<PurgeCacheResult>> {
     let database = state.database().await?;
     let now = Utc::now();
 
@@ -267,6 +267,6 @@ pub(crate) async fn purge_cache(
     if deletion.rows_affected == 0 {
         Err(ErrorKind::NoSuchCache.into())
     } else {
-        Ok(deletion.rows_affected)
+        Ok(Json(PurgeCacheResult{ objects_deleted: deletion.rows_affected }))
     }
 }
