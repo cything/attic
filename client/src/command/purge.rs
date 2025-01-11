@@ -8,10 +8,20 @@ use crate::{api::ApiClient, cache::CacheRef, cli::Opts, config::Config};
 #[derive(Debug, Parser)]
 pub struct Purge {
     /// Name of the cache to purge
+    ///
+    /// This can either be `servername:cachename` or `cachename`
     cache: CacheRef,
 
     /// Duration to purge
+    #[clap(short = 'd', long)]
     older_than: Duration,
+
+    /// Dry-run
+    ///
+    /// Returns the number of objects that would be deleted instead of
+    /// actually deleting them.
+    #[clap(short = 'n', long)]
+    dry_run: bool,
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
@@ -28,7 +38,12 @@ pub async fn run(opts: Opts) -> Result<()> {
         api.set_endpoint(api_endpoint)?;
     }
 
-    api.purge_cache(cache_name, sub.older_than).await?;
+    let result = api.purge_cache(cache_name, sub.older_than, sub.dry_run).await?;
+    if sub.dry_run {
+        eprintln!("would delete objects: {}", result.objects_deleted);
+    } else {
+        eprintln!("objects deleted: {}", result.objects_deleted);
+    }
 
     Ok(())
 }

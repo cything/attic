@@ -17,6 +17,8 @@ pub struct PurgeCacheRequest {
 
     /// Duration to purge
     pub older_than: Duration,
+
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

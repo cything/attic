@@ -221,6 +221,7 @@ impl ApiClient {
         &self,
         cache: &CacheName,
         older_than: Duration,
+        dry_run: bool,
     ) -> Result<PurgeCacheResult> {
         let endpoint = self
             .endpoint
@@ -229,6 +230,7 @@ impl ApiClient {
         let payload = PurgeCacheRequest {
             cache: cache.to_owned(),
             older_than: *older_than,
+            dry_run,
         };
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
